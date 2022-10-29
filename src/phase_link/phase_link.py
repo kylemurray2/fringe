@@ -42,8 +42,8 @@ def runEvd(inps):
     import os
     os.environ['OPENBLAS_NUM_THREADS'] = "1"
 
-    import evdlib
-    aa = evdlib.Evd()
+    import phase_linklib
+    aa = phase_linklib.Phaselink()
     
     ###Explicit wiring. Can be automated later.
     aa.inputDS = inps.inputDS
@@ -66,16 +66,6 @@ def runEvd(inps):
     aa.run()
 
 
-def create_vrts(slc_dir):
-    """Create VRTs for the input SLCs and weights."""
-    import glob
-    from osgeo import gdal
-
-    slc_files = glob.glob(os.path.join(slc_dir, "*.slc"))
-    for f in slc_files:
-        gdal.Translate(f + ".vrt", f, format="VRT")
-
-
 if __name__ == '__main__':
     '''
     Main driver.
@@ -84,4 +74,4 @@ if __name__ == '__main__':
     inps = cmdLineParser()
 
     runEvd(inps)
-    create_vrts(inps.outputFolder)
+
