@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import sparse
+from scipy import sparse,spatial
 import os
 import datetime
 import time
@@ -59,7 +59,7 @@ class Network(object):
         for i in range(numDates - 1):
             for j in range(i+1,numDates):
 
-                B = np.abs(self.baselineDict[self.dateList[j]] - 
+                B = np.abs(self.baselineDict[self.dateList[j]] -
                             self.baselineDict[self.dateList[i]])
 
                 corr = 1.0 - 2*B*rangeSpacing*((np.cos(theta))**2)/wvl/r
@@ -82,21 +82,62 @@ class Network(object):
 
             for i in range(len(m_idx_list)):
                 idx = sorted([m_idx_list[i], s_idx_list[i]])
-                coh[idx[0],idx[1]] = 0.001
+                #coh[idx[0],idx[1]] = 0.001
                 date12 = self.dateList[idx[0]] + '-' + self.dateList[idx[1]]
                 if date12 not in self.pairsDates:
                     #print(date12)
                     self.pairsDates.append(date12)
-  
+
+    def delaunay(self):
+
+        idxs = []
+        dec_year = list()
+        for d in self.dateList:
+            yr = d[0:4]
+            mo = d[4:6]
+            day = d[6:8]
+            dt = datetime.date.toordinal(datetime.date(int(yr), int(mo), int(day)))
+            d0 = datetime.date.toordinal(datetime.date(int(yr), 1, 1))
+            doy = np.asarray(dt)-d0+1
+            dec_year.append(float(yr) + (doy/365.25))
+
+        def find_neighbors(pindex, triang):
+            neighbors = list()
+            for simplex in triang.vertices:
+                if pindex in simplex:
+                    neighbors.extend([simplex[i] for i in range(len(simplex)) if simplex[i] != pindex])
+                    '''
+                    this is a one liner for if a simplex contains the point we`re interested in,
+                    extend the neighbors list by appending all the *other* point indices in the simplex
+                    '''
+            #now we just have to strip out all the dulicate indices and return the neighbors list:
+            return list(set(neighbors))
+
+        x_list = dec_year
+        y_list = []
+        for d in self.dateList:
+            b = self.baselineDict[d]
+            y_list.append(b/1000)
+
+        tri = spatial.Delaunay(np.array([[x,y] for x,y in zip(x_list, y_list)]))
+
+        self.pairsDates = []
+        for ii in range(len(self.dateList)):
+            neighbor_indices = find_neighbors(ii,tri)
+            for jj in neighbor_indices:
+                self.pairsDates.append(self.dateList[ii] + '-' + self.dateList[jj])
+
+        return None
+
     def small_baseline(self, timeThreshold = 100, baselineThreshold = 100):
-        
+
         return None
 
     def single_master(self):
-        
+
         master_date = self.dateList[0]
         self.pairsDates = []
-        
+
         for i in range(1, len(self.dateList)):
             date12 = master_date + '-' + self.dateList[i]
             self.pairsDates.append(date12)
@@ -132,7 +173,3 @@ class Network(object):
         plt.tight_layout()
 
         plt.savefig("Pairs.png")
-
-
-
-
