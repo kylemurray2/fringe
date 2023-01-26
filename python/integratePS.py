@@ -13,7 +13,6 @@ from scipy.interpolate import griddata
 import shelve
 import datetime
 import time
-
 from Network import Network
 
 def cmdLineParser(iargs = None):
@@ -161,9 +160,9 @@ def getCoherence(dsTcor, psDataset, outDataset,
     return None
 
 
-def main(iargs=None):
+def main(inps):
 
-    inps = cmdLineParser(iargs)
+    # inps = cmdLineParser(iargs)
 
     # Open the SLC dataset to read
     dsSlc = gdal.Open(inps.slcStack, gdal.GA_ReadOnly)
@@ -212,18 +211,52 @@ def main(iargs=None):
     networkObj = Network()
     networkObj.dateList = dateList
 
-    '''
-    networkObj.get_baselineDict(inps.coregSlcDir)
-    r = 709482.0
-    wvl = 0.0312283810416
-    theta = 30.0*np.pi/180.0
-    rangeSpacing = 1.02*29
-    coherenceMatrix = networkObj.geometrical_coherence(rangeSpacing, theta, wvl, r)
-    networkObj.min_span_tree(coherenceMatrix, 1)
 
-    networkObj.plot_network()
-    '''
-    networkObj.single_master()
+
+    dataDir ='./merged/baselines/'
+    refDate = inps.reference_date
+    refDir = os.path.join(dataDir, refDate)
+    networkObj.baselineDict[refDate] = 0.0
+
+
+    def getbl(secDir):
+        bl_file =secDir  + '/' + secDir.split('/')[-1] + '.vrt'
+        ds = gdal.Open(bl_file)
+        bl = ds.GetVirtualMemArray()
+        bl = np.nanmean(bl)
+        return bl
+
+    bls = []
+    for d in networkObj.dateList:
+        if d == inps.reference_date:
+            bls.append(0)
+        else:
+            secDir = './merged/baselines/' + d
+            baseline = getbl(secDir)
+            networkObj.baselineDict[d] = baseline
+            bls.append(float(baseline))
+
+
+
+#    '''
+#    networkObj.get_baselineDict(inps.coregSlcDir)
+#    r = 709482.0
+#    wvl = 0.0312283810416
+#    theta = 30.0*np.pi/180.0
+#    rangeSpacing = 1.02*29
+#    coherenceMatrix = networkObj.geometrical_coherence(rangeSpacing, theta, wvl, r)
+#    networkObj.min_span_tree(coherenceMatrix, 1)
+#
+#    networkObj.plot_network()
+#    '''
+
+    if inps.networkType=='singleMaster':
+        networkObj.single_master()
+    elif inps.networkType=='delaunay':
+        networkObj.delaunay()
+    else:
+        print('choose valid networkType in inps.networkType')
+        return
 
     print(networkObj.pairsDates)
     for pair in networkObj.pairsDates:
