@@ -44,7 +44,7 @@ def runNmap(inps):
     import nmaplib
 
     aa = nmaplib.Nmap()
-    
+
     ###Explicit wiring. Can be automated later.
     aa.inputDS = inps.inputDS
     aa.weightsDS = inps.outputDS
@@ -62,16 +62,12 @@ def runNmap(inps):
     aa.run()
 
 
-if __name__ == '__main__':
-    '''
-    Main driver.
-    '''
+def main(inps):
 
-    inps = cmdLineParser()
+    #inps = cmdLineParser()
 
     outDir = os.path.abspath(os.path.dirname(inps.outputDS))
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
     runNmap(inps)
-

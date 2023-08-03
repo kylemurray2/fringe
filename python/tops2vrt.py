@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import numpy as np 
+import numpy as np
 import os
 import glob
 import datetime
@@ -37,12 +37,12 @@ def radarGeometryTransformer(latfile, lonfile, epsg=4326):
     '''
     Create a coordinate transformer to convert map coordinates to radar image line/pixels.
     '''
-    
+
     driver = gdal.GetDriverByName('VRT')
     inds = gdal.OpenShared(latfile, gdal.GA_ReadOnly)
     tempds = driver.Create('', inds.RasterXSize, inds.RasterYSize, 0)
     inds = None
-    
+
     tempds.SetMetadata({'SRS' : 'EPSG:{0}'.format(epsg),
                         'X_DATASET': lonfile,
                         'X_BAND' : '1',
@@ -52,10 +52,10 @@ def radarGeometryTransformer(latfile, lonfile, epsg=4326):
                         'LINE_OFFSET' : '0',
                         'PIXEL_STEP' : '1',
                         'LINE_STEP' : '1'}, 'GEOLOCATION')
-    
+
     trans = gdal.Transformer( tempds, None, ['METHOD=GEOLOC_ARRAY'])
-    
-    return trans    
+
+    return trans
 
 def lonlat2pixeline(lonFile, latFile, lon, lat):
 
@@ -88,21 +88,24 @@ def getLinePixelBbox(geobbox, latFile, lonFile):
     return ymin, ymax, xmin, xmax
 
 
-if __name__ == '__main__':
+def main(inps):
     '''
     Main driver.
     '''
-    
+
     ##Parse command line
-    inps = cmdLineParse()
+#    inps = cmdLineParse()
 
     ###Get ann list and slc list
     slclist = glob.glob(os.path.join(inps.indir,'SLC','*','*.slc.full'))
     num_slc = len(slclist)
+    if num_slc==0:
+        slclist = glob.glob(os.path.join(inps.indir,'SLC','*','*.slc'))
+        num_slc = len(slclist)
 
     print('number of SLCs discovered: ', num_slc)
     print('we assume that the SLCs and the vrt files are sorted in the same order')
-    
+
     slclist.sort()
 
 
@@ -134,12 +137,12 @@ if __name__ == '__main__':
         height = ds.RasterYSize
         ds = None
 
-        metadata['WAVELENGTH'] = 0.05546576 
+        metadata['WAVELENGTH'] = 0.05546576
         metadata['ACQUISITION_TIME'] = os.path.basename(os.path.dirname(slc))
-        
+
         path = os.path.abspath(slc)
 
-        tag = metadata['ACQUISITION_TIME'] 
+        tag = metadata['ACQUISITION_TIME']
 
         vrttmpl='''<VRTDataset rasterXSize="{width}" rasterYSize="{height}">
     <VRTRasterBand dataType="CFloat32" band="1" subClass="VRTRawRasterBand">
@@ -150,7 +153,7 @@ if __name__ == '__main__':
         <ByteOrder>LSB</ByteOrder>
     </VRTRasterBand>
 </VRTDataset>'''
-        
+
 
 #        outname =  datetime.datetime.strptime(tag.upper(), '%d-%b-%Y %H:%M:%S UTC').strftime('%Y%m%d')
 
@@ -172,7 +175,7 @@ if __name__ == '__main__':
         print('stack directory: {0} already exists'.format(inps.stackdir))
     else:
         print('creating stack directory: {0}'.format(inps.stackdir))
-        os.makedirs(inps.stackdir)    
+        os.makedirs(inps.stackdir)
 
     latFile = os.path.join(inps.indir, "geom_reference", "lat.rdr.full.vrt")
     lonFile = os.path.join(inps.indir, "geom_reference", "lon.rdr.full.vrt")
@@ -207,7 +210,7 @@ if __name__ == '__main__':
             <SourceBand>1</SourceBand>
             <SourceProperties RasterXSize="{width}" RasterYSize="{height}" DataType="CFloat32"/>
             <SrcRect xOff="{xmin}" yOff="{ymin}" xSize="{xsize}" ySize="{ysize}"/>
-            <DstRect xOff="0" yOff="0" xSize="{xsize}" ySize="{ysize}"/> 
+            <DstRect xOff="0" yOff="0" xSize="{xsize}" ySize="{ysize}"/>
         </SimpleSource>
         <Metadata domain="slc">
             <MDI key="Date">{date}</MDI>
@@ -218,14 +221,14 @@ if __name__ == '__main__':
                                 xmin=xmin, ymin=ymin,
                                 xsize=xsize, ysize=ysize,
                                 date=date, acq=meta['ACQUISITION_TIME'],
-                                wvl = meta['WAVELENGTH'], index=ind+1, 
+                                wvl = meta['WAVELENGTH'], index=ind+1,
                                 path = os.path.abspath( os.path.join(inps.outdir, date+'.vrt')))
             fid.write(outstr)
 
         fid.write('</VRTDataset>')
 
     ####Set up latitude, longitude and height files
-    
+
     if os.path.exists( inps.geomdir):
         print('directory {0} already exists.'.format(inps.geomdir))
     else:
@@ -255,6 +258,3 @@ if __name__ == '__main__':
                                        height = height,
                                        PATH = os.path.abspath( os.path.join(inps.indir, 'geom_reference', val+'.rdr.full.vrt')),
                                        linewidth = width * 8))
-
-
-
