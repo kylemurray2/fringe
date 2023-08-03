@@ -83,7 +83,7 @@ class Network(object):
             for i in range(len(m_idx_list)):
                 idx = sorted([m_idx_list[i], s_idx_list[i]])
                 #coh[idx[0],idx[1]] = 0.001
-                date12 = self.dateList[idx[0]] + '-' + self.dateList[idx[1]]
+                date12 = self.dateList[idx[0]] + '_' + self.dateList[idx[1]]
                 if date12 not in self.pairsDates:
                     #print(date12)
                     self.pairsDates.append(date12)
@@ -125,7 +125,7 @@ class Network(object):
         for ii in range(len(self.dateList)):
             neighbor_indices = find_neighbors(ii,tri)
             for jj in neighbor_indices:
-                self.pairsDates.append(self.dateList[ii] + '-' + self.dateList[jj])
+                self.pairsDates.append(self.dateList[ii] + '_' + self.dateList[jj])
 
         return None
 

@@ -278,9 +278,15 @@ if __name__ == '__main__':
     '''
     Main driver.
     '''
+    
     #*************************************************************#
     # read the input options and prepare some output directories
     inps = cmdLineParser()
+    # inps.datumDir = '../Fringe2/Sequential/Datum_connection/'
+    # inps.outDir = './Fringe2/adjusted_wrapped_DS'
+    # inps.slcDir = './Fringe2/slcs/'
+    # inps.miniStackDir = './Fringe2/Sequential/miniStacks/'
+    # inps.miniStackSize = 15
     if not os.path.exists(inps.outDir):
         os.makedirs(inps.outDir)
 

@@ -116,7 +116,7 @@ def loadData(inps):
         data[:, slc] = indata[bitmask]
 
     ds = None
-    return data
+    return data,count
 
 
 def covariance(C1, C2):
