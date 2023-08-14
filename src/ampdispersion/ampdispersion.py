@@ -2,6 +2,8 @@
 
 import os
 import argparse
+import util
+
 
 def cmdLineParser():
     '''
@@ -12,7 +14,7 @@ def cmdLineParser():
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i', '--input', type=str, dest='inputDS',
             required=True, help='Input GDAL SLC stack VRT')
-    parser.add_argument('-o', '--output', type=str, dest='outputDS',
+    parser.add_argument('-o', '--output', type=str, dest='outputAD',
             required=True, help='Output amplitude dispersion dataset')
     parser.add_argument('-m', '--mean', type=str, dest='meanampDS',
             default='', help='Output mean amplitude')
@@ -26,7 +28,7 @@ def cmdLineParser():
     return parser.parse_args()
 
 
-def runAmpdispersion(indict):
+def runAmpdispersion(inps):
     '''
     Actually run ampdispersion.
     '''
@@ -34,10 +36,10 @@ def runAmpdispersion(indict):
     import ampdispersionlib
 
     aa = ampdispersionlib.Ampdispersion()
-    
+
     ###Explicit wiring. Can be automated later.
     aa.inputDS = inps.inputDS
-    aa.outputDS = inps.outputDS
+    aa.outputAD = inps.outputAD
     aa.meanampDS = inps.meanampDS
 
     aa.blocksize = inps.linesPerBlock
@@ -48,17 +50,20 @@ def runAmpdispersion(indict):
 
     return
 
+def main(inps):
+# if __name__ == '__main__':
+#     '''
+#     Main driver.
+#     '''
 
-if __name__ == '__main__':
-    '''
-    Main driver.
-    '''
+    #inps = cmdLineParser()
 
-    inps = cmdLineParser()
-
-    outDir = os.path.abspath(os.path.dirname(inps.outputDS))
+    outDir = os.path.abspath(os.path.dirname(inps.outputAD))
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
     runAmpdispersion(inps)
 
+    # Write xml files for ampdispersion and mean
+    util.write_xml(inps.outputAD,inps.nx,inps.ny,1,'FLOAT','BSQ')
+    util.write_xml(inps.meanampDS,inps.nx,inps.ny,1,'FLOAT','BSQ')

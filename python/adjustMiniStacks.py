@@ -11,6 +11,7 @@ import isce
 import isceobj
 import time
 import datetime
+import util
 
 #from Stack import Stack, MiniStack
 
@@ -79,7 +80,7 @@ def getStackDict(dateList, miniStackDir, datumDir, outDir, miniStackSize, subDir
         miniStackCount = miniStackCount + 1
 
         ###Determine end of ministack
-        indEnd = indStart + inps.miniStackSize
+        indEnd = indStart + miniStackSize
         indEnd = min(indEnd, stackSize)
 
         miniStackDates = dateList[indStart:indEnd]
@@ -97,7 +98,7 @@ def getStackDict(dateList, miniStackDir, datumDir, outDir, miniStackSize, subDir
             outName = os.path.join(os.path.abspath(outDir), dd + outputExtension)
             stackDict[dd] = [miniStackDate, datumPath, temporalCoh, outName]
 
-        indStart += inps.miniStackSize
+        indStart += miniStackSize
 
     return stackDict
 
@@ -298,3 +299,11 @@ def main(inps):
 
     else:
         adjust_wrapped(dateList, inps)
+
+    #Link to actual DS wrapped images in the adjusted_wrapped_DS
+
+    os.system('ln -s '+ os.getcwd() + '/' + inps.miniStackDir[2:] + '*/EVD/*slc ./Fringe/adjusted_wrapped_DS/')
+    # Write xml file
+    slcFns = glob.glob( inps.outDir + '/*slc')
+    for  f in slcFns:
+        util.write_xml(f,inps.nx,inps.ny,1,'CFLOAT','BSQ')

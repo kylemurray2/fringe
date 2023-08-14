@@ -6,6 +6,8 @@ import os
 import argparse
 import shutil
 from Stack_fringe import Stack, MiniStack
+import util
+import glob
 
 def cmdLineParser():
     '''
@@ -68,7 +70,7 @@ def runEvd(inps, inputDataset, weightDS, outDir, miniStackCount, compressedSlcDi
     '''
 
     import os
-    os.environ['OPENBLAS_NUM_THREADS'] = "1"
+    #os.environ['OPENBLAS_NUM_THREADS'] = "1"
 
     #import evdlib
     #aa = evdlib.Evd()
@@ -80,8 +82,8 @@ def runEvd(inps, inputDataset, weightDS, outDir, miniStackCount, compressedSlcDi
     aa.inputDS = inputDataset
     aa.weightsDS = weightDS
     aa.outputFolder = outDir
-    aa.method = "STBAS"
-    aa.bandWidth = 5
+    #aa.method = "STBAS"
+    #aa.bandWidth = 5
     aa.miniStackCount = miniStackCount
 
     aa.blocksize = inps.linesPerBlock
@@ -188,7 +190,6 @@ def main(inps):
     runEvdOnMiniStack = True
 
 
-
     #*************************************************************#
     # while there are more mini stacks kepp process them
     miniStackCount = 0;
@@ -239,10 +240,24 @@ def main(inps):
 
             del miniStack
 
+            # Write xml files for slcs
+            ds_SLCS = glob.glob(outDir + '/*slc')
+            for fn_slc in ds_SLCS:
+                util.write_xml(fn_slc,inps.nx,inps.ny,1,dataType='CFLOAT',scheme='BIP')
+
+            # Write xml files for tcorr
+            ds_tcorrs= glob.glob(outDir + '/*bin')
+            for fn_slc in ds_tcorrs:
+                util.write_xml(fn_slc,inps.nx,inps.ny,1,dataType='CFLOAT',scheme='BIP')
+
+            # Write xml files for datum slcs
+            ds_SLCS = glob.glob('./Fringe/Sequential/Datum_connection/EVD/*slc')
+            for fn_slc in ds_SLCS:
+                util.write_xml(fn_slc,inps.nx,inps.ny,1,dataType='CFLOAT',scheme='BIP')
 
         ###Update index of ministack start
         indStart += inps.miniStackSize
-
+        print('indStart: ' + str(indStart))
 
     #*************************************************************#
     # Datum connection to connect the phase series of mini stacks

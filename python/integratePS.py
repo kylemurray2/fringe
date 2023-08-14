@@ -14,6 +14,7 @@ import shelve
 import datetime
 import time
 from Network import Network
+from PyPS2 import util
 
 def cmdLineParser(iargs = None):
     '''
@@ -70,7 +71,7 @@ def get_fullres_ifgram(ds, bandi, bandj, x0, y0, xoff, yoff):
     # TODO: need to use actual crossmul module to avoid aliasing
     slci = ds.GetRasterBand(bandi).ReadAsArray(x0, y0, xoff, yoff)
     slcj = ds.GetRasterBand(bandj).ReadAsArray(x0, y0, xoff, yoff)
-    ifgram = np.exp(1J*np.angle(slcj*np.conjugate(slci)))
+    ifgram = np.exp(1J*np.angle(slci*np.conjugate(slcj)))
 
     return ifgram
 
@@ -121,7 +122,7 @@ def integratePS2DS(dsDS_band_i, dsDS_band_j, dsSlc, dsTcor, psDataset, outDatase
         ifgram = get_fullres_ifgram(dsSlc, band_i, band_j, x0, y0, xoff, yoff)
 
         # pair i-j of DS pixels
-        ifgram_ds_ps = band_j_DS * np.conjugate(band_i_DS)
+        ifgram_ds_ps = band_i_DS * np.conjugate(band_j_DS)
 
         # get the data for PS pixels
         ifgram_ds_ps[psPixels == 1] = ifgram[psPixels == 1]
@@ -181,7 +182,7 @@ def main(inps):
     print("number of rows: ", nrows)
     print("number of columns: ", ncols)
 
-    linesPerBlock = 1000
+    linesPerBlock = 8000
     nblocks = int(nrows/linesPerBlock)
     if (nblocks == 0):
         nblocks = 1
@@ -207,89 +208,44 @@ def main(inps):
         dateList.append(date_i)
     dateList.sort()
 
-    # setup a network, compute coherence based on geometry, find min span tree pairs
-    networkObj = Network()
-    networkObj.dateList = dateList
-
-
-
-    dataDir ='./merged/baselines/'
-    refDate = inps.reference_date
-    refDir = os.path.join(dataDir, refDate)
-    networkObj.baselineDict[refDate] = 0.0
-
-
-    def getbl(secDir):
-        bl_file =secDir  + '/' + secDir.split('/')[-1] + '.vrt'
-        ds = gdal.Open(bl_file)
-        bl = ds.GetVirtualMemArray()
-        bl = np.nanmean(bl)
-        return bl
-
-    bls = []
-    for d in networkObj.dateList:
-        if d == inps.reference_date:
-            bls.append(0)
-        else:
-            secDir = './merged/baselines/' + d
-            baseline = getbl(secDir)
-            networkObj.baselineDict[d] = baseline
-            bls.append(float(baseline))
-
-
-
-#    '''
-#    networkObj.get_baselineDict(inps.coregSlcDir)
-#    r = 709482.0
-#    wvl = 0.0312283810416
-#    theta = 30.0*np.pi/180.0
-#    rangeSpacing = 1.02*29
-#    coherenceMatrix = networkObj.geometrical_coherence(rangeSpacing, theta, wvl, r)
-#    networkObj.min_span_tree(coherenceMatrix, 1)
-#
-#    networkObj.plot_network()
-#    '''
-
-    if inps.networkType=='singleMaster':
-        networkObj.single_master()
-    elif inps.networkType=='delaunay':
-        networkObj.delaunay()
-    else:
-        print('choose valid networkType in inps.networkType')
-        return
-
-    print(networkObj.pairsDates)
-    for pair in networkObj.pairsDates:
-        print(pair)
-    print(len(networkObj.pairsDates))
+    # # setup a network, compute coherence based on geometry, find min span tree pairs
+    # networkObj = Network()
+    # networkObj.dates = inps.dates
 
     # loop over all pairs
-    for pair in networkObj.pairsDates:
+    for pair in inps.pairs:
+        if not os.path.isfile(inps.outDir + '/' + pair + '.int'):
+            print(pair)
+            date_i = pair.split('_')[0]
+            date_j = pair.split('_')[1]
 
-        date_i = pair.split('-')[0]
-        date_j = pair.split('-')[1]
+            band_i = dateList.index(date_i) + 1
+            band_j = dateList.index(date_j) + 1
 
-        band_i = dateList.index(date_i) + 1
-        band_j = dateList.index(date_j) + 1
+            outDir = os.path.join(inps.outDir,pair)
+            if not os.path.isdir(outDir):
+                os.system('mkdir -p ' + outDir)
 
-        # name of the output file witth both PS and DS pixels
-        outName = os.path.join(inps.outDir, "{0}_{1}.int".format(date_i, date_j))
+            # name of the output file witth both PS and DS pixels
+            outName = os.path.join(inps.outDir,pair, "{0}_{1}.int".format(date_i, date_j))
 
-        # dataset for the PS-DS integrated wrapped phase
-        driver = gdal.GetDriverByName("ENVI")
-        outDataset = driver.Create(outName, ncols, nrows, 1, gdal.GDT_CFloat32)
+            # dataset for the PS-DS integrated wrapped phase
+            driver = gdal.GetDriverByName("ENVI")
+            outDataset = driver.Create(outName, ncols, nrows, 1, gdal.GDT_CFloat32)
 
-        dsDS_band_i = gdal.Open(os.path.join(inps.dsStackDir, date_i + ".slc.vrt"), gdal.GA_ReadOnly)
-        dsDS_band_j = gdal.Open(os.path.join(inps.dsStackDir, date_j + ".slc.vrt"), gdal.GA_ReadOnly)
+            dsDS_band_i = gdal.Open(os.path.join(inps.dsStackDir, date_i + ".slc.vrt"), gdal.GA_ReadOnly)
+            dsDS_band_j = gdal.Open(os.path.join(inps.dsStackDir, date_j + ".slc.vrt"), gdal.GA_ReadOnly)
 
-        # integrate PS to DS for this pair and write to file block by block
-        integratePS2DS(dsDS_band_i, dsDS_band_j, dsSlc, dsTcor, psDataset, outDataset,
-                       nblocks, linesPerBlock, band_i, band_j)
+            # integrate PS to DS for this pair and write to file block by block
+            integratePS2DS(dsDS_band_i, dsDS_band_j, dsSlc, dsTcor, psDataset, outDataset,
+                           nblocks, linesPerBlock, band_i, band_j)
 
-        # close the dataset
-        outDataset.FlushCache()
-        dsDS_band_i = None
-        dsDS_band_j = None
+            # close the dataset
+            outDataset.FlushCache()
+            dsDS_band_i = None
+            dsDS_band_j = None
+
+            util.write_xml(outName,ncols,nrows,1,dataType='CFLOAT',scheme='BIP')
 
     # write the unwrapping command for this pair
     if inps.unwrapMethod is not None:
@@ -303,7 +259,7 @@ def main(inps):
         runf= open(run_outname,'w')
         runf.write("set -e\n")
 
-        for pair in networkObj.pairsDates:
+        for pair in inps.pairs:
             date_i = pair.split('-')[0]
             date_j = pair.split('-')[1]
             intName = os.path.join(inps.outDir, "{0}_{1}.int".format(date_i, date_j))
@@ -321,8 +277,8 @@ def main(inps):
     dsTcor = None
     psDataset = None
 
-if __name__ == '__main__':
-    '''
-    Main driver.
-    '''
-    main()
+# if __name__ == '__main__':
+#     '''
+#     Main driver.
+#     '''
+#     main()
