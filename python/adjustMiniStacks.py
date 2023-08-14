@@ -23,10 +23,10 @@ def cmdLineParser():
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-s', '--slcDir', type=str, dest='slcDir',
             required=True, help='Input folder which contains vrt files of all slcs')
-    
+
     parser.add_argument('-m', '--miniStackDir', type=str, dest='miniStackDir',
             required=True, help='Input mini stack directory')
- 
+
     parser.add_argument('-d', '--datumDir', type=str, dest='datumDir',
             required=True, help='Input mini stack directory')
 
@@ -56,10 +56,10 @@ def getDates(slcDir):
     slcs = glob.glob(os.path.join(slcDir, "*.vrt"))
     for slc in slcs:
         dd = os.path.basename(slc)
-        dd = dd.replace(".vrt","") 
-        dateList.append(dd) 
+        dd = dd.replace(".vrt","")
+        dateList.append(dd)
 
-    dateList.sort()  
+    dateList.sort()
     return dateList
 
 def getStackDict(dateList, miniStackDir, datumDir, outDir, miniStackSize, subDir = "EVD", fileExtension=".slc", outputExtension = ".phase"):
@@ -71,9 +71,9 @@ def getStackDict(dateList, miniStackDir, datumDir, outDir, miniStackSize, subDir
     stackSize = len(dateList)
     miniStackCount = 0;
     indStart = 0
-    
+
     stackDict = {}
- 
+
     while (indStart < stackSize):
         ##Update mini stack counter
         miniStackCount = miniStackCount + 1
@@ -81,9 +81,9 @@ def getStackDict(dateList, miniStackDir, datumDir, outDir, miniStackSize, subDir
         ###Determine end of ministack
         indEnd = indStart + inps.miniStackSize
         indEnd = min(indEnd, stackSize)
-            
+
         miniStackDates = dateList[indStart:indEnd]
-        
+
         miniStackPath = dateList[indStart] + "_" + dateList[indEnd-1]
         miniStackPath = os.path.join(miniStackDir, miniStackPath)
         #datumPath = os.path.join(datumDir , "EVD/" + dateList[indEnd-1]+".slc")
@@ -118,7 +118,7 @@ def adjustMiniStackPhase(miniStackSlc, adjustSlc, output, length, width):
     miniSlc = np.memmap(miniStackSlc, dtype=np.complex64, mode='r', shape=(length,width))
     adjust = np.memmap(adjustSlc, dtype=np.complex64, mode='r', shape=(length,width))
     outPhase = np.memmap(output, dtype=np.float32, mode='w+', shape=(length,width))
-  
+
     ind = [ii for ii in range(0, length, 1000)]
     if ind[-1] != length:
         ind.append(length)
@@ -128,10 +128,10 @@ def adjustMiniStackPhase(miniStackSlc, adjustSlc, output, length, width):
     for ii in range(len(ind)-1):
         startLine = ind[ii]
         endLine = ind[ii+1]
-        miniSlc_block = miniSlc[startLine:endLine, :]  
+        miniSlc_block = miniSlc[startLine:endLine, :]
         adjust_block = adjust[startLine:endLine, :]
         outPhase[startLine:endLine, :] = np.angle(miniSlc_block*np.conjugate(adjust_block))
-    
+
     miniSlc = None
     adjust = None
     outPhase = None
@@ -170,13 +170,13 @@ def adjust_acquisition_vrt(miniStackSlc, adjustSlc, output, length, width):
     </SimpleSource>
   </VRTRasterBand>
 </VRTDataset>'''
-    
+
     with open( '{0}.vrt'.format(output) , 'w') as fid:
             fid.write( vrttmpl.format(width=width,
                                      length=length,
                                      miniStackSlc=miniStackSlc,
                                      adjustment=adjustSlc))
-    
+
 def adjust_acquisition_wrapped_vrt(miniStackSlc, adjustSlc, output, length, width):
 
     vrttmpl = '''
@@ -232,7 +232,7 @@ def adjust_wrapped(dateList, inps):
 
 def adjust_unwrapped(dateList, inps):
 
-    stackDict = getStackDict(dateList, inps.miniStackDir, inps.datumDir 
+    stackDict = getStackDict(dateList, inps.miniStackDir, inps.datumDir
                              , inps.outDir, inps.miniStackSize, subDir = "unwrap"
                              , fileExtension=".unw", outputExtension = ".phase")
 
@@ -272,16 +272,16 @@ def adjust_unwrapped(dateList, inps):
         fid_timeseries.write('</VRTDataset>')
 
         #adjustMiniStackPhase(miniStackSlc, adjustSlc, output, length, width)
-    
 
-if __name__ == '__main__':
-    '''
-    Main driver.
-    '''
-    
+def main(inps):
+#if __name__ == '__main__':
+#    '''
+#    Main driver.
+#    '''
+#
     #*************************************************************#
     # read the input options and prepare some output directories
-    inps = cmdLineParser()
+    #inps = cmdLineParser()
     # inps.datumDir = '../Fringe2/Sequential/Datum_connection/'
     # inps.outDir = './Fringe2/adjusted_wrapped_DS'
     # inps.slcDir = './Fringe2/slcs/'
@@ -298,5 +298,3 @@ if __name__ == '__main__':
 
     else:
         adjust_wrapped(dateList, inps)
-
-    
