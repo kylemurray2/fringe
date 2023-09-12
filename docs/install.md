@@ -65,7 +65,7 @@ The src, build and install folders need to be separate.
 
 ```
 > cd src
-> git clone https://github.com/isce-framework/fringe.git
+> git clone https://github.com/kylemurray2/fringe.git
 ```
 
 ### 2.3 Build and install
