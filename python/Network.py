@@ -125,8 +125,62 @@ class Network(object):
         for ii in range(len(self.dateList)):
             neighbor_indices = find_neighbors(ii,tri)
             for jj in neighbor_indices:
-                self.pairsDates.append(self.dateList[ii] + '_' + self.dateList[jj])
+                if int(self.dateList[ii]) < int(self.dateList[jj]):
+                    self.pairsDates.append(self.dateList[ii] + '_' + self.dateList[jj])
 
+        return None
+
+
+    def sequential1(self):
+        dates = self.dateList
+        self.pairsDates = []
+        for ii,d in enumerate(dates[0:-1]):
+            self.pairsDates.append(dates[ii] + '_' + dates[ii+1])
+        return None
+
+    def sequential2(self):
+        skip=2
+        dates = self.dateList
+        self.pairsDates = []
+
+        for ii,d in enumerate(dates[0:-1]):
+            for jj in np.arange(1,skip+1):
+                if ii+jj < len(dates):
+                    self.pairsDates.append(dates[ii] + '_' + dates[ii+jj])
+        return None
+
+
+    def sequential3(self):
+        skip=3
+        dates = self.dateList
+        self.pairsDates = []
+
+        for ii,d in enumerate(dates[0:-1]):
+            for jj in np.arange(1,skip+1):
+                if ii+jj < len(dates):
+                    self.pairsDates.append(dates[ii] + '_' + dates[ii+jj])
+        return None
+
+    def sequential4(self):
+        skip=4
+        dates = self.dateList
+        self.pairsDates = []
+
+        for ii,d in enumerate(dates[0:-1]):
+            for jj in np.arange(1,skip+1):
+                if ii+jj < len(dates):
+                    self.pairsDates.append(dates[ii] + '_' + dates[ii+jj])
+        return None
+
+    def sequential5(self):
+        skip=5
+        dates = self.dateList
+        self.pairsDates = []
+
+        for ii,d in enumerate(dates[0:-1]):
+            for jj in np.arange(1,skip+1):
+                if ii+jj < len(dates):
+                    self.pairsDates.append(dates[ii] + '_' + dates[ii+jj])
         return None
 
     def small_baseline(self, timeThreshold = 100, baselineThreshold = 100):

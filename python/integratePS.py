@@ -14,7 +14,7 @@ import shelve
 import datetime
 import time
 from Network import Network
-from PyPS2 import util
+from SARTS import util
 
 def cmdLineParser(iargs = None):
     '''

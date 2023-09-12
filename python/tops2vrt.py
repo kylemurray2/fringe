@@ -181,12 +181,12 @@ def main(inps):
     lonFile = os.path.join(inps.indir, "geom_reference", "lon.rdr.full.vrt")
 
     # setting up a subset of the stack
-    if inps.geobbox:
+    if inps.geobbox is not None:
         # if the bounding box in geo-coordinate is given, this has priority
         print("finding bbox based on geo coordinates of {} ...".format(inps.geobbox))
         ymin, ymax, xmin, xmax = getLinePixelBbox(inps.geobbox, latFile, lonFile)
 
-    elif inps.bbox:
+    elif inps.bbox is not None:
         # if bbox in geo not given then look for line-pixel bbox
         print("using the input bbox based on line and pixel subset")
         ymin, ymax, xmin, xmax = inps.bbox

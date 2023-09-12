@@ -39,7 +39,7 @@ def runAmpdispersion(inps):
 
     ###Explicit wiring. Can be automated later.
     aa.inputDS = inps.inputDS
-    aa.outputAD = inps.outputAD
+    aa.outputDS = inps.outputAD
     aa.meanampDS = inps.meanampDS
 
     aa.blocksize = inps.linesPerBlock
