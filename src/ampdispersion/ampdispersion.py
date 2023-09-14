@@ -2,7 +2,6 @@
 
 import os
 import argparse
-import util
 
 
 def cmdLineParser():
@@ -64,6 +63,3 @@ def main(inps):
 
     runAmpdispersion(inps)
 
-    # Write xml files for ampdispersion and mean
-    util.write_xml(inps.outputAD,inps.nx,inps.ny,1,'FLOAT','BSQ')
-    util.write_xml(inps.meanampDS,inps.nx,inps.ny,1,'FLOAT','BSQ')

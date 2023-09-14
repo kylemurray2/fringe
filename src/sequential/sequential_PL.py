@@ -6,7 +6,6 @@ import os
 import argparse
 import shutil
 from Stack_fringe import Stack, MiniStack
-import util
 import glob
 
 def cmdLineParser():
@@ -240,20 +239,6 @@ def main(inps):
 
             del miniStack
 
-            # Write xml files for slcs
-            ds_SLCS = glob.glob(outDir + '/*slc')
-            for fn_slc in ds_SLCS:
-                util.write_xml(fn_slc,inps.nx,inps.ny,1,dataType='CFLOAT',scheme='BIP')
-
-            # Write xml files for tcorr
-            ds_tcorrs= glob.glob(outDir + '/*bin')
-            for fn_slc in ds_tcorrs:
-                util.write_xml(fn_slc,inps.nx,inps.ny,1,dataType='CFLOAT',scheme='BIP')
-
-            # Write xml files for datum slcs
-            ds_SLCS = glob.glob('./Fringe/Sequential/Datum_connection/EVD/*slc')
-            for fn_slc in ds_SLCS:
-                util.write_xml(fn_slc,inps.nx,inps.ny,1,dataType='CFLOAT',scheme='BIP')
 
         ###Update index of ministack start
         indStart += inps.miniStackSize
