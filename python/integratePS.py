@@ -214,10 +214,13 @@ def main(inps):
 
     # loop over all pairs
     for pair in inps.pairs:
+        date_i = pair.split('_')[0]
+        date_j = pair.split('_')[1]
+        outName = os.path.join(inps.outDir,pair, "{0}_{1}.int".format(date_i, date_j))
+        
         if not os.path.isfile(inps.outDir + '/' + pair + '.int'):
-            print(pair)
-            date_i = pair.split('_')[0]
-            date_j = pair.split('_')[1]
+            
+            print('Making ' + outName)
 
             band_i = dateList.index(date_i) + 1
             band_j = dateList.index(date_j) + 1
@@ -227,7 +230,6 @@ def main(inps):
                 os.system('mkdir -p ' + outDir)
 
             # name of the output file witth both PS and DS pixels
-            outName = os.path.join(inps.outDir,pair, "{0}_{1}.int".format(date_i, date_j))
 
             # dataset for the PS-DS integrated wrapped phase
             driver = gdal.GetDriverByName("ENVI")
