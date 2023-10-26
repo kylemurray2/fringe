@@ -103,7 +103,7 @@ class Network(object):
 
         def find_neighbors(pindex, triang):
             neighbors = list()
-            for simplex in triang.vertices:
+            for simplex in triang.simplices:
                 if pindex in simplex:
                     neighbors.extend([simplex[i] for i in range(len(simplex)) if simplex[i] != pindex])
                     '''
