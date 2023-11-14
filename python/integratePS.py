@@ -217,8 +217,10 @@ def main(inps):
         date_i = pair.split('_')[0]
         date_j = pair.split('_')[1]
         outName = os.path.join(inps.outDir,pair, "{0}_{1}.int".format(date_i, date_j))
-        
-        if not os.path.isfile(inps.outDir + '/' + pair + '.int'):
+        lkFile = os.path.join(inps.outDir,pair, 'fine_lk.int')
+
+        # we won't make the ifg if there is already an ifg OR a downlooked ifg.
+        if not os.path.isfile(outName) and not os.path.isfile(lkFile):
             
             print('Making ' + outName)
 
@@ -248,7 +250,9 @@ def main(inps):
             dsDS_band_j = None
 
             util.write_xml(outName,ncols,nrows,1,dataType='CFLOAT',scheme='BIP')
-
+        else:
+            print(outName + ' already exists')
+            
     # write the unwrapping command for this pair
     if inps.unwrapMethod is not None:
         # prepare output dir
